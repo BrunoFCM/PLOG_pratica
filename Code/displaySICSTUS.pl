@@ -1,66 +1,61 @@
-:- encoding(utf8).
-
 print_upper_frame(N):-
     N > 0,
     N1 is N - 1,
-    ansi_format([fg(blue)], '╦', []),
+    write('B'),
     print_frame_divisor(N),
     print_upper_frame(N1).
 
 print_upper_frame(0):-
-    ansi_format([], '╗\n', []).
+    put_code(187),
+    nl(user_output).
 
 print_lower_frame(N):-
     N > 0,
     N1 is N - 1,
-    ansi_format([fg(blue)], '╩', []),
+    write('B'),
     print_frame_divisor(N),
     print_lower_frame(N1).
 
 print_lower_frame(0):-
-    ansi_format([], '╝\n', []).
+    put_code(188),
+    nl(user_output).
 
 print_frame_divisor(1).
 
 print_frame_divisor(N):-
     N > 1,
-    ansi_format([fg(black)], '═', []).
+    put_code(205).
 
 print_left_frame(a):-
-    ansi_format([fg(red)], '╠', []).
+    write('R').
 
 print_right_frame(a):-
-    ansi_format([fg(red)], '╣\n', []).
+    write('R'),
+    nl(user_output).
 
-print_piece(P):-
-    P = 0,
-    ansi_format([fg(black)], '⯀', []).
+print_piece(0):-
+    write('E').
 
-print_piece(P):-
-    P = 1,
-    ansi_format([fg(red)], '⯀', []).
+print_piece(1):-
+    write('R').
 
-print_piece(P):-
-    P = 2,
-    ansi_format([fg(blue)], '⯀', []).
+print_piece(2):-
+    write('B').
 
 print_piece_divisor([]).
 
 print_piece_divisor(ROW):-
-    not(ROW == []),
-    ansi_format([fg(black)], '║', []).
+    \+(ROW == []),
+    put_code(186).
 
-print_connect(C):-
-    C = 0,
-    ansi_format([], '◆', []).
+print_connect(0):-
+    write('e').
 
-print_connect(C):-
-    C = 1,
-    ansi_format([fg(red)], '◆', []).
+print_connect(1):-
+    write('r').
 
-print_connect(C):-
-    C = 2,
-    ansi_format([fg(blue)], '◆', []).
+print_connect(2):-
+    write('b').
 
 print_piece_row([PIECE]):-
     print_piece(PIECE),
@@ -75,17 +70,19 @@ print_piece_row([]):-
     print_right_frame(a).
 
 print_connect_row([CONNECT|ROW]):-
-    ansi_format([fg(black)], '═', []),
+    put_code(205),
     print_connect(CONNECT),
     print_connect_row(ROW).
 
 print_connect_row([]):-
-    ansi_format([fg(black)], '═║\n', []).
+    put_code(205),
+    put_code(186),
+    nl(user_output).
 
 print_row([PIECE|PROW], [CONNECT|CROW]):-
     print_left_frame(a),
     print_piece_row([PIECE|PROW]),
-    ansi_format([fg(black)], '║', []),
+    put_code(186),
     print_connect_row([CONNECT|CROW]).
 
 print_row([],[]).
@@ -102,17 +99,18 @@ print_rows([PROW|PBOARD],[]):-
 print_rows([],[]).
 
 print_board([PBOARD,CBOARD]):-
-    ansi_format([fg(black)], '\n╔', []),
+    nl(user_output),
+    put_code(201),
     print_upper_frame(8),
     print_rows(PBOARD,CBOARD),
-    ansi_format([fg(black)], '╚', []),
+    put_code(200),
     print_lower_frame(8).
 
 print_player(0):-
-    ansi_format([fg(blue)], 'Blue player turn', []).
+    write('Blue player turn').
 
 print_player(1):-
-    ansi_format([fg(red)], 'Red player turn', []).
+    write('Red player turn').
 
 display_game(BOARD, PLAYER):-
     print_board(BOARD),
