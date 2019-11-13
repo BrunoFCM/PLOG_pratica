@@ -1,4 +1,4 @@
-:- dynamic(visited/2);
+:- dynamic(visited/2).
 
 /*------------------------------------------------------------------------------------------------------*/
 
@@ -12,14 +12,13 @@ find([_|Row], X, Value):-
 find([Row|_], X, 1, Value):-
     find(Row, X, Value).
 
-find([_|GameState], X, Y, Value):-
+find([_|BoardPieces], X, Y, Value):-
     Y > 1,
+    Y < 9,
+    X > 0,
+    X < 9,
     Yn is Y - 1,
-    find(GameState, X, Yn, Value).
-
-/*------------------------------------------------------------------------------------------------------*/
-
-listPoint(X, Y, [X,Y]).
+    find(BoardPieces, X, Yn, Value).
 
 /*------------------------------------------------------------------------------------------------------*/
 
@@ -36,15 +35,11 @@ makePointList(X, [Y|YList], List):-
 
 /*------------------------------------------------------------------------------------------------------*/
 
-getStartingHorizontal([],1).
-
 getStartingHorizontal([2|_], 1).
 
 getStartingHorizontal([_|Row], X):-
     getStartingHorizontal(Row, Xn),
     X is Xn + 1.
-
-getStartingVertical([],1).
 
 getStartingVertical([[1|_]|_], 1).
 
@@ -64,78 +59,76 @@ getStartingPoints([BoardPieces, _], Points, 1):-
 /*------------------------------------------------------------------------------------------------------*/
 
 isAdjacent([X,Y], [X,Ya]):-
-    Y = Ya + 1.
+    Ya is Y + 1.
 
 isAdjacent([X,Y], [X,Ya]):-
-    Y = Ya - 1.
+    Ya is Y - 1.
 
 isAdjacent([X,Y], [Xa,Y]):-
-    X = Xa + 1.
+    Xa is X + 1.
 
 isAdjacent([X,Y], [Xa,Y]):-
-    X = Xa - 1.
+    Xa is X - 1.
 
-isValidAdjacent(GameState, Player, Point, [Xadjacent,Yadjacent]):-
+isValidAdjacent([BoardPieces,_], Player, Point, [Xadjacent,Yadjacent]):-
     isAdjacent(Point, [Xadjacent,Yadjacent]),
-    find(GameState, Xadjacent, Yadjacent, Player).
+    find(BoardPieces, Xadjacent, Yadjacent, Player).
 
 getAdjacents(GameState, Player, Point, Adjacents):-
     findall(Adjacent, isValidAdjacent(GameState, Player, Point, Adjacent), Adjacents).
 
 /*------------------------------------------------------------------------------------------------------*/
 
-isDiagonal([X,Y], [X,Y]).
+isDiagonal([X,Y], [X,Y], [Xp,Yp]):-
+    Xp is X + 1,
+    Yp is Y + 1.
 
-isDiagonal([X,Y], [X,Yc]):-
-    Yc = Y + 1.
+isDiagonal([X,Y], [X,Yp], [Xp,Yp]):-
+    Xp is X + 1,
+    Yp is Y - 1.
 
-isDiagonal([X,Y], [Xc,Yc]):-
-    Yc = Y + 1,
-    Xc = X + 1.
+isDiagonal([X,Y], [Xp,Yp], [Xp,Yp]):-
+    Xp is X - 1,
+    Yp is Y - 1.
 
-isDiagonal([X,Y], [Xc,Y]):-
-    Xc = X + 1.
+isDiagonal([X,Y], [Xp,Y], [Xp,Yp]):-
+    Xp is X - 1,
+    Yp is Y + 1.
 
 /*----------------------------------------------------------------------------*/
 
-checkForEmpty([0|_], 2).
-
 checkForEmpty([0|_], 1).
 
+checkForEmpty([0|_], 0).
+
 checkForEmpty([_|Row], X):-
-    X > 0,
+    X >= 0,
     Xn is X - 1,
     checkForEmpty(Row, Xn).
-
-checkForEmpty([Row|_], X, 2):-
-    checkForEmpty(Row,X).
 
 checkForEmpty([Row|_], X, 1):-
     checkForEmpty(Row,X).
 
+checkForEmpty([Row|_], X, 0):-
+    checkForEmpty(Row,X).
+
 checkForEmpty([_|BoardPieces], X, Y):-
-    Y > 0,
+    Y >= 0,
     Yn is Y - 1,
     checkForEmpty(BoardPieces, X, Yn).
 
 /*----------------------------------------------------------------------------*/
 
-isValidDiagonal(BoardConnections, Player, Point, [Xdiag, Ydiag]):-
-    isDiagonal(Point, [Xdiag, Ydiag]),
-    find(BoardConnections, Xdiag, Ydiag, Player).
-
-isUnbreakableDiagonal([BoardPieces, BoardConnections], Player, Point, [Xdiag,Ydiag]):-
-    isValidDiagonal(BoardConnections, Player, Point, [Xdiag,Ydiag]),
-    \+(checkForEmpty(BoardPieces, Xdiag,Ydiag)).
+isUnbreakableDiagonal([BoardPieces, BoardConnections], Player, Point, [Xdiagonalpoint,Ydiagonalpoint]):-
+    isDiagonal(Point, [Xconnect, Yconnect],[Xdiagonalpoint,Ydiagonalpoint]),
+    find(BoardConnections, Xconnect, Yconnect, Player),
+    find(BoardPieces, Xdiagonalpoint, Ydiagonalpoint, Player),
+    \+(checkForEmpty(BoardPieces, Xconnect,Yconnect)).
 
 getDiagonals(GameState, Player, Point, Diagonals):-
     findall(Diagonal, isUnbreakableDiagonal(GameState, Player, Point, Diagonal), Diagonals).
 
 /*------------------------------------------------------------------------------------------------------*/
-
-visitPoint(_, 1, [8,_], _).
-
-visitPoint(_, 2, [_,8], _).
 
 visitPoint(GameState, Player, [Xpoint,Ypoint], ExtraPoints):-
     \+(visited(Xpoint,Ypoint)),
@@ -146,16 +139,28 @@ visitPoint(GameState, Player, [Xpoint,Ypoint], ExtraPoints):-
 
 /*------------------------------------------------------------------------------------------------------*/
 
+visitPoints(_, 1, [[8,_]|_]).
+
+visitPoints(_, 2, [[_,8]|_]).
+
 visitPoints(GameState, Player, [Point|Points]):-
     visitPoint(GameState, Player, Point, ExtraPoints),
     append(Points, ExtraPoints, NewPoints),
+    !,
     visitPoints(GameState, Player, NewPoints).
+
+visitPoints(GameState, Player, [_|Points]):-
+    !,
+    visitPoints(GameState, Player, Points).
+
+visitPoints(_, _, []):-
+    !, fail.
 
 /*------------------------------------------------------------------------------------------------------*/
 
 checkGameEnd(GameState, Player):-
     getStartingPoints(GameState, Points, Player),
     !,    
-    retractall(visited/2),
+    retractall(visited(_,_)),
     visitPoints(GameState, Player, Points),
-    retractall(visited/2).
+    retractall(visited(_,_)).
