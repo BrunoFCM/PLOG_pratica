@@ -106,11 +106,11 @@ print_board([PBOARD,CBOARD]):-
     put_code(200),
     print_lower_frame(8).
 
-print_player(1):-
+print_player(2):-
     write('Blue player turn'),
     nl(user_output).
 
-print_player(2):-
+print_player(1):-
     write('Red player turn'),
     nl(user_output).
 
