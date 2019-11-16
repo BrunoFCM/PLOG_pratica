@@ -10,10 +10,10 @@ updateTurnState([ 1, 0], 0, [ 0, 1]).
 updateTurnState([ 0, 1], 0, [ 1, 0]).
 
 /* getInput(+Board, +P1, +P2, +CurrPlayer, +Turns, -Xcoord, -Ycoord) */
-getInput( Board, 0, _, 1, _, Xcoord, Ycoord):-
+getInput( _, 0, _, 1, _, Xcoord, Ycoord):-
     getPlayerInput(1, Xcoord, Ycoord).
 
-getInput( Board, _, 0, 2, _, Xcoord, Ycoord):-
+getInput( _, _, 0, 2, _, Xcoord, Ycoord):-
     getPlayerInput(2, Xcoord, Ycoord).
 
 /*TODO: make getInput for bots*/
@@ -27,9 +27,10 @@ playLoop(Board, Player1, Player2, Turns):-
     getCurrentPlayer(Turns, CurrPlayer),
     doTurn(Board, Player1, Player2, CurrPlayer, Turns, NewBoard, Cut),
     /*TODO: display */
+    display_game(NewBoard, CurrPlayer),
     updateTurnState(Turns, Cut, NewTurns),
-    \+ checkGameEnd(NewBoard, CurrPlayer),
-    !, playLoop(NewBoard, Player1, Player2, NewTurns).
+    \+ checkGameEnd(NewBoard, CurrPlayer), !,
+    playLoop(NewBoard, Player1, Player2, NewTurns).
 
 /* game end */
 playLoop(_,_,_,_).

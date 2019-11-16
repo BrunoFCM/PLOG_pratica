@@ -106,11 +106,13 @@ print_board([PBOARD,CBOARD]):-
     put_code(200),
     print_lower_frame(8).
 
-print_player(0):-
-    write('Blue player turn').
-
 print_player(1):-
-    write('Red player turn').
+    write('Blue player turn'),
+    nl(user_output).
+
+print_player(2):-
+    write('Red player turn'),
+    nl(user_output).
 
 display_game(BOARD, PLAYER):-
     print_board(BOARD),

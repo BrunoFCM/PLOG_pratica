@@ -93,7 +93,8 @@ connectDiags(Board, Diags, Player, Xnum, Ynum, NewDiags):-
     connectDiag(Board, NewD2, Player, XnumInc, YnumDec, Xnum, YnumDec, NewD3),
     connectDiag(Board, NewD3, Player, XnumInc, YnumInc, Xnum, Ynum, NewDiags).
 
-checkCutsY([Gottem | _], [Gottem | _], _, _, 1).
+checkCutsY([1 | _], [2 | _], _, _, 1).
+checkCutsY([2 | _], [1 | _], _, _, 1).
 checkCutsY(_, _, 1, 1, 0).
 checkCutsY( _, _, _, 1, _):-
     !, fail.
