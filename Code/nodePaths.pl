@@ -24,37 +24,26 @@ isAdjacentNode(Node, Adjacent):-
 
 /*------------------------------------------------------------------------------------------------------*/
 
-display():-
-    findall(Node, distance(Node, _), Nodes),
-    display(Nodes).
-
-display([]).
-
-display([[X,Y]|Nodes]):-
-    write(X),
-    write(','),
-    write(Y),
-    write('='),
-    distance([X,Y], Distance),
-    write(Distance),
-    nl,
-    display(Nodes).
-
 dijkstra([]).
 
 dijkstra(Nodelist):-
     pointListLength(Nodelist, Size),
     listOfSize(1, Size, DistanceList),
-    visit(Nodelist, DistanceList),
-    display.
+    visit(Nodelist, DistanceList).
 
 % Stops when the node list is empty
+
 visit([], []).
 
-visit([[X,Y] | _], [Distance|DistanceList]):-    
+visit([[X,Y] | Nodes], [Distance|DistanceList]):-    
     distance([X,Y], 0),
-
     % From this point on, this predicate does not fail, assuring the retraction after the assertion
+    
+    NewDistance is Distance - 1,
+
+    retractall(distance([X,Y], _)),
+
+    asserta(distance([X,Y], NewDistance)),
     
     findall(Adjacent, isAdjacentNode([X,Y], Adjacent), Adjacents),
     findall(Diagonal, isDiagonalNode([X,Y], Diagonal), Diagonals),
@@ -67,12 +56,10 @@ visit([[X,Y] | _], [Distance|DistanceList]):-
 
     visit(NewNodesList, NewDistanceList).
 
-visit([[X,Y] | Nodes], [Distance|DistanceList]):-
-    Distance < 31,
-    
+visit([[X,Y] | Nodes], [Distance|DistanceList]):-    
     distance([X,Y], OlderDistance),
     (Distance < OlderDistance ; Distance = 1),
-
+    
     % From this point on, this predicate does not fail, assuring the retraction after the assertion
     
     retractall(distance([X,Y], _)),
@@ -104,6 +91,12 @@ initDistancesRow([Player|Row], X, Y, Player):-
     Xn is X + 1,
     initDistancesRow(Row, Xn, Y, Player).
 
+% Opposing player piece found
+initDistancesRow([Opponent|Row], X, Y, Player):-
+    opponent(Player,Opponent),
+    Xn is X + 1,
+    initDistancesRow(Row, Xn, Y, Player).
+
 % Empty starting Postion for player 1
 initDistancesRow([0|Row], 1, Y, 1):-
     asserta(distance([1,Y], 1)),
@@ -118,11 +111,6 @@ initDistancesRow([0|Row], X, 1, 2):-
 % Empty position found
 initDistancesRow([0|Row], X, Y, Player):-
     asserta(distance([X,Y], 99)),
-    Xn is X + 1,
-    initDistancesRow(Row, Xn, Y, Player).
-
-% Opposing player piece found
-initDistancesRow([_|Row], X, Y, Player):-
     Xn is X + 1,
     initDistancesRow(Row, Xn, Y, Player).
 
@@ -167,18 +155,37 @@ quickSort(List, Sorted):-
 
 /*------------------------------------------------------------------------------------------------------*/
 
-makePath([1,Y], [[1,Y]], 1).
+makePath([[1,Y]|_], [[1,Y]], 1).
 
-makePath([X,1], [[X,1]], 2).
+makePath([[X,1]|_], [[X,1]], 2).
 
-makePath(StartingPoint, [StartingPoint|Path], Player):-
-    distance(StartingPoint, Distance),
-    findall(Adjacent, isAdjacentNode(StartingPoint, Adjacent), Adjacents),
-    findall(Diagonal, isDiagonalNode(StartingPoint, Diagonal), Diagonals),
+makePath([[X,Y]|AlternativePoints], Path, Player):-
+    \+visited(X,Y),
+    distance([X,Y], 0),
+    asserta(visited(X,Y)),
+
+    distance([X,Y], Distance),
+    findall(Adjacent, isAdjacentNode([X,Y], Adjacent), Adjacents),
+    findall(Diagonal, isDiagonalNode([X,Y], Diagonal), Diagonals),
     append(Adjacents, Diagonals, NextPoints),
-    quickSort(NextPoints, [NextNode|SortedPoints]),
+    quickSort(NextPoints, SortedPoints),
 
-    makePath(NextNode, Path, Player).
+    makePath(SortedPoints, Path, Player).
+
+makePath([[X,Y]|AlternativePoints], [[X,Y]|Path], Player):-
+    \+visited(X,Y),
+    asserta(visited(X,Y)),
+
+    distance([X,Y], Distance),
+    findall(Adjacent, isAdjacentNode([X,Y], Adjacent), Adjacents),
+    findall(Diagonal, isDiagonalNode([X,Y], Diagonal), Diagonals),
+    append(Adjacents, Diagonals, NextPoints),
+    quickSort(NextPoints, SortedPoints),
+
+    makePath(SortedPoints, Path, Player).
+
+makePath([_|AlternativePoints], Path, Player):-
+    makePath(AlternativePoints, Path, Player).
 
 /*------------------------------------------------------------------------------------------------------*/
 
@@ -194,12 +201,15 @@ getEndpoints(2, Endpoints):-
 
 getIdealPath([BoardPieces|_], Player, Path):-
     retractall(distance(_,_)),
+    retractall(visited(_,_)),
     initDistances(BoardPieces, 1, Player),
     findall(Node, distance(Node, 1), StartingNodes),
     dijkstra(StartingNodes),
+    retractall(visited(_,_)),
     getEndpoints(Player, Endpoints),
     quickSort(Endpoints, ClosestEndpoints),
-    subtractRandomIndex(ClosestEndpoints, EndPoint, _),
+    subtractRandomIndex(ClosestEndpoints, FirstEndpoint, AlternativeEndpoints),
     !,
-    makePath(EndPoint,Path, Player),
+    makePath([FirstEndpoint|AlternativeEndpoints],Path, Player),
+    retractall(visited(_,_)),
     retractall(distance(_,_)).
