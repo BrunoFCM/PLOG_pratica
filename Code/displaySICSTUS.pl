@@ -117,3 +117,11 @@ print_player(2):-
 display_game(BOARD, PLAYER):-
     print_board(BOARD),
     print_player(PLAYER).
+
+displayResult(1):-
+    write('Red Player Won'),
+    nl(user_output).
+
+displayResult(2):-
+    write('Blue Player Won'),
+    nl(user_output).

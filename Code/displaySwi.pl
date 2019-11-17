@@ -33,8 +33,8 @@ print_right_frame(a):-
     ansi_format([fg(red)], '╣\n', []).
 
 
-print_piece(0):-
-    ansi_format([fg(black)], ' ', []).
+print_piece(0):-	
+    ansi_format([fg(black)], '⯀', []).
 
 print_piece(1):-
     ansi_format([fg(red)], '⯀', []).
@@ -103,7 +103,7 @@ print_board([PBOARD,CBOARD]):-
     ansi_format([fg(black)], '╚', []),
     print_lower_frame(8).
 
-print_player(0):-
+print_player(2):-
     ansi_format([fg(blue)], 'Blue player turn', []).
 
 print_player(1):-
@@ -111,4 +111,13 @@ print_player(1):-
 
 display_game(BOARD, PLAYER):-
     print_board(BOARD),
-    print_player(PLAYER).
+    print_player(PLAYER),
+    nl.
+
+displayResult(1):-
+    ansi_format([fg(red)], 'Red Player Won', []),
+    nl.
+
+displayResult(2):-
+    ansi_format([fg(blue)], 'Blue Player Won', []),
+    nl.
