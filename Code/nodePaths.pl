@@ -12,7 +12,7 @@ isValidDiagonalNode([Xa,Ya], [Xb,Yb]):-
 
 isValidDiagonalNode([Xa,Ya], [Xb,Yb]):-
     (distance([Xa,Yb], 0) ; distance([Xb,Ya], 0)).
-% TODO Get proper diagonals (checkForEmpty) and intersect results with the empty nodes (Several finds)
+
 isDiagonalNode(Node, Diagonal):-
     isDiagonal(Node, _, Diagonal),
     isValidDiagonalNode(Node, Diagonal),
@@ -24,11 +24,26 @@ isAdjacentNode(Node, Adjacent):-
 
 /*------------------------------------------------------------------------------------------------------*/
 
+display():-
+    findall(Node, distance(Node, _), Nodes),
+    display(Nodes).
+
+display([]).
+
+display([[X,Y]|Nodes]):-
+    write(X),
+    write(','),
+    write(Y),
+    write('='),
+    distance([X,Y], Distance),
+    write(Distance),
+    nl,
+    display(Nodes).
+
 dijkstra([]).
 
-dijkstra([Node|NodeList]):-
-    visit([Node], 1),
-    dijkstra(NodeList).
+dijkstra(Nodelist):-
+    visit(Nodelist, 1).
 
 % Stops when the node list is empty
 visit([], _).
@@ -37,28 +52,25 @@ visit([[X,Y] | _], Distance):-
     \+visited(X,Y),
     
     distance([X,Y], 0),
-    NewDistance is Distance - 1,
 
     % From this point on, this predicate does not fail, assuring the retraction after the assertion
     asserta(visited(X,Y)),
-    
-    retractall(distance([X,Y], _)),
-    asserta(distance([X,Y], NewDistance)),
     
     findall(Adjacent, isAdjacentNode([X,Y], Adjacent), Adjacents),
     findall(Diagonal, isDiagonalNode([X,Y], Diagonal), Diagonals),
     append(Adjacents, Diagonals, NewNodes),
 
-    NextDistance is Distance + 1,
-    visit(NewNodes, NextDistance),
+    visit(NewNodes, Distance),
 
     retract(visited(X,Y)).
 
-visit([[X,Y] | _], Distance):-
+visit([[X,Y] | Nodes], Distance):-
+    Distance < 31,
+
     \+visited(X,Y),
     
     distance([X,Y], OlderDistance),
-    (Distance < OlderDistance ; OlderDistance = 99),
+    (Distance < OlderDistance ; Distance = 1),
 
     % From this point on, this predicate does not fail, assuring the retraction after the assertion
     asserta(visited(X,Y)),
@@ -72,6 +84,7 @@ visit([[X,Y] | _], Distance):-
 
     NextDistance is Distance + 1,
     visit(NewNodes, NextDistance),
+    visit(Nodes, Distance),
 
     retract(visited(X,Y)).
 
@@ -120,17 +133,20 @@ initDistances([Row|BoardPieces], Y, Player):-
 
 /*------------------------------------------------------------------------------------------------------*/
 
-getNodeOfDistance([Node|_], Distance, Node):-
+getNodeOfValidDistance([Node|_], _, Node):-
+    distance(Node, 0).
+
+getNodeOfValidDistance([Node|_], Distance, Node):-
     distance(Node, Distance).
 
-getNodeOfDistance([_|NodeList], Distance, Node):-
-    getNodeOfDistance(NodeList, Distance, Node).
+getNodeOfValidDistance([_|NodeList], Distance, Node):-
+    getNodeOfValidDistance(NodeList, Distance, Node).
 
 /*------------------------------------------------------------------------------------------------------*/
 
-makePath([8,_], [], 1).
+makePath([8,Y], [[8,Y]], 1).
 
-makePath([_,8], [], 2).
+makePath([X,8], [[X,8]], 2).
 
 makePath(StartingPoint, [StartingPoint|Path], Player):-
     distance(StartingPoint, Distance),
@@ -138,7 +154,7 @@ makePath(StartingPoint, [StartingPoint|Path], Player):-
     findall(Diagonal, isDiagonalNode(StartingPoint, Diagonal), Diagonals),
     append(Adjacents, Diagonals, NextPoints),
     NextDistance is Distance + 1,
-    getNodeOfDistance(NextPoints, NextDistance, NextNode),
+    getNodeOfValidDistance(NextPoints, NextDistance, NextNode),
     makePath(NextNode, Path, Player).
 
 /*------------------------------------------------------------------------------------------------------*/

@@ -34,7 +34,8 @@ simulatePaths(Depth, Turns, BoardState, Play):-
     getIdealPath(BoardState, Opponent, OpponentPath),
     handlePaths(PlayerPath, OpponentPath, Path),
     subtractRandomIndex(Path, Play, AlternativePlays),
-    simulateFollowingPaths(Depth, Turns, BoardState, AlternativePlays).
+    !,
+    simulateFollowingPaths(Depth, Turns, BoardState, [Play|AlternativePlays]).
 
 /*------------------------------------------------------------------------------------------------------*/
 

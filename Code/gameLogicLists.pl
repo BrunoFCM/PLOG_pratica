@@ -17,7 +17,7 @@ makePointList(X, [Y|YList], List):-
 
 subtractRandomIndex(List, Value, NewList):-
     length(List, Length),
-    random_between(0, Length, Index),
+    random_between(1, Length, Index),
     subtractIndex(List, Index, Value, NewList).
 
 subtractIndex([Value|List], 1, Value, List).
@@ -25,5 +25,21 @@ subtractIndex([Value|List], 1, Value, List).
 subtractIndex([Element|List], Index, Value, [Element|NewList]):-
     IndexN is Index - 1,
     subtractIndex(List, IndexN, Value, NewList).
+
+/*------------------------------------------------------------------------------------------------------*/
+
+intersectUnit(_,[],[]).
+
+intersectUnit(Element, [Element|_], [Element]).
+
+intersectUnit(ElementA, [_|ListB], List):-
+    intersectUnit(ElementA, ListB, List).
+
+intersect([],_,[]).
+
+intersect([ElementA|ListA], ListB, List):-
+    intersectUnit(ElementA, ListB, List1),
+    intersect(ListA, ListB, List2),
+    append(List1, List2, List).
 
 /*------------------------------------------------------------------------------------------------------*/
