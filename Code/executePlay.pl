@@ -1,3 +1,9 @@
+
+/* NOTE: although in the comments coordinate values are referred to as such, for ease of understanding */
+/* they are called Xcoord and Ycoord when containing a char value and Xnum and Ynum when containing a numerical value. */
+
+/* getNumericalCoord(+CharCoordinate, -NumericalCoordinate) */
+/* Simultaneously checks if the input coordinate is valid (whithin the board range) and converts it to a numerical value. */
 getNumericalCoord('1', 1).
 getNumericalCoord('2', 2).
 getNumericalCoord('3', 3).
@@ -7,7 +13,12 @@ getNumericalCoord('6', 6).
 getNumericalCoord('7', 7).
 getNumericalCoord('8', 8).
 
-/* Used to place a tile in an empty space */
+
+/* placePieceX(+Board, +Player, +Xcoordinate, +Ycoordinate, +IsDiag, -NewBoard) */
+/* placePieceY(+Column, +Player, +Ycoordinate, +IsDiag, -NewColumn) */
+/* These two predicates are used in tandem to place a piece of the given player on the board at the given coordinates; */
+/* they are used for both regular pieces and diagonal connectors, since the only difference is on the stopping criteria, */
+/* and the IsDiag variable is used to indicate this. A yes return means successful placement, and a no means an invalid placement. */
 placePieceY([0 | RemColumn], Player, 1, 0, [Player | RemColumn]).
 
 placePieceY([ _ | RemColumn], Player, 1, 1, [Player | RemColumn]).
@@ -28,7 +39,11 @@ placePieceX([CurrentColumn | RemBoard], Player, Xnum, Ynum, IsDiag, [CurrentColu
     Xnum2 is Xnum - 1,
     placePieceX(RemBoard, Player, Xnum2, Ynum, IsDiag, RetBoard).
 
-/* Used to check for matching tiles in diagonal spaces*/
+
+/* checkPieceX(+Board, +Player, +Xcoordinate, +Ycoordinate) */
+/* checkPieceY(+Column, +Player, +Ycoordinate) */
+/* These two predicates are used in tandem to check if there is a piece of the given player on the given coordinates of the board; */
+/* yes and no is returned accordingly. */
 checkPieceY([Player | _ ], Player, 1).
 checkPieceY(_, _, 1):-
     !, fail.
@@ -43,6 +58,9 @@ checkPieceX([ _ | RemBoard], Player, Xnum, Ynum):-
     checkPieceX(RemBoard, Player, Xnum2, Ynum).
 
 
+/* connectDiag(+Board, +Diags, +Player, +Xtile, +Ytile, +Xbridge, +Ybridge, -NewDiags) */
+/* Checks if a diagonal connection is to be made via the bridging space at the bridge coordinates and places it. */
+
 connectDiag(Board, Diags, Player, Xtile, Ytile, Xbridge, Ybridge, NewDiags):-
     checkPieceX(Board, Player, Xtile, Ytile),
     !, placePieceX(Diags, Player, Xbridge, Ybridge, 1, NewDiags).
@@ -50,7 +68,9 @@ connectDiag(Board, Diags, Player, Xtile, Ytile, Xbridge, Ybridge, NewDiags):-
 connectDiag(_, Diags, _, _, _, _, _, Diags).
 
 
-
+/* connectDiags(+Board, +Diags, +Player, +Xcoordinate, +Ycoordinate, -NewDiags) */
+/* Checks all diagonal directions of a given tile for possible connections to be made. */
+/* There are several unique cases that require special attention, all related with being at the edges of the board. */
 
 connectDiags(Board, Diags, Player, 1, 1, NewDiags):-
     connectDiag(Board, Diags, Player, 2, 2, 1, 1, NewDiags).
@@ -93,6 +113,12 @@ connectDiags(Board, Diags, Player, Xnum, Ynum, NewDiags):-
     connectDiag(Board, NewD2, Player, XnumInc, YnumDec, Xnum, YnumDec, NewD3),
     connectDiag(Board, NewD3, Player, XnumInc, YnumInc, Xnum, Ynum, NewDiags).
 
+
+/* checkCutsX(+OldDiags, +NewDiags, +X, +Y, -Cut) */
+/* checkCutsY(+OldCol, +NewCol, +X, +Y, -Cut) */
+/* These two predicates are used in tandem to compare two arrays of diagonal connection tiles; */
+/* a difference means a cut was made. (X and Y are used only for the recursion and indicate nothing) */
+
 checkCutsY([1 | _], [2 | _], _, _, 1).
 checkCutsY([2 | _], [1 | _], _, _, 1).
 checkCutsY(_, _, 1, 1, 0).
@@ -111,6 +137,9 @@ checkCutsX([_ | OldDiags], [_ | NewDiags], Xnum, Ynum, Cut):-
 
 
 /* A small issue of X and Y being the wrong way around arised, and due to a lack of time, all Xs and Ys above this line are swapped */
+
+/* executePlay(+Board, +Player, +Xcoordinate, +Ycoordinate, -NewBoard, -Cut) */
+/* Places a tile on the board and and enacts all subsequent consequences, and informs the caller on whether a cut was made. */
 
 executePlay([Board, Diags], Player, Xcoord, Ycoord, [RetBoard, RetDiags], Cut):-
     getNumericalCoord(Xcoord, Xnum), getNumericalCoord(Ycoord, Ynum),

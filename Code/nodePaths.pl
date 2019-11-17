@@ -46,7 +46,9 @@ dijkstra(Nodelist):-
     visit(Nodelist, 1).
 
 % Stops when the node list is empty
-visit([], _).
+visit([], _):-
+    display,
+    fail.
 
 visit([[X,Y] | _], Distance):-
     \+visited(X,Y),

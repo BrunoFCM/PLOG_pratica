@@ -52,7 +52,8 @@ simulateDoubleMove(Depth, Turns, BoardState, _):-
 /*Considering two turn plays*/ 
 simulateFollowingPaths(Depth, [_,2], BoardState, [[Xcoord,Ycoord]|_]):-
     Depth > 0,
-    executePlay(BoardState, [0,2], Xcoord, Ycoord, NewBoard, Cut),
+    getCurrentPlayer([0,2], Player),
+    executePlay(BoardState, Player, Xcoord, Ycoord, NewBoard, Cut),
     updateTurnState([0,2], Cut, NewTurns),
     DepthN is Depth - 1,
     /*Simulating the next move as the same player*/
@@ -60,7 +61,8 @@ simulateFollowingPaths(Depth, [_,2], BoardState, [[Xcoord,Ycoord]|_]):-
 
 simulateFollowingPaths(Depth, [2,_], BoardState, [[Xcoord,Ycoord]|_]):-
     Depth > 0,
-    executePlay(BoardState, [2,0], Xcoord, Ycoord, NewBoard, Cut),
+    getCurrentPlayer([2,0], Player),
+    executePlay(BoardState, Player, Xcoord, Ycoord, NewBoard, Cut),
     updateTurnState([2,0], Cut, NewTurns),
     DepthN is Depth - 1,
     /*Simulating the next move as the same player*/
@@ -69,7 +71,8 @@ simulateFollowingPaths(Depth, [2,_], BoardState, [[Xcoord,Ycoord]|_]):-
 % Considering one turn plays
 simulateFollowingPaths(Depth, Turns, BoardState, [[Xcoord,Ycoord]|_]):-
     Depth > 0,
-    executePlay(BoardState, Turns, Xcoord, Ycoord, NewBoard, Cut),
+    getCurrentPlayer(Turns, Player),
+    executePlay(BoardState, Player, Xcoord, Ycoord, NewBoard, Cut),
     updateTurnState(Turns, Cut, NewTurns),
     DepthN is Depth - 1,
     /*Simulating the next move as the opposing player*/
