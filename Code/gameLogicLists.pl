@@ -43,3 +43,17 @@ intersect([ElementA|ListA], ListB, List):-
     append(List1, List2, List).
 
 /*------------------------------------------------------------------------------------------------------*/
+
+listOfSize(_, 0, []).
+
+listOfSize(Element, Size, [Element|List]):-
+    SizeN is Size - 1,
+    listOfSize(Element, SizeN, List).
+
+/*------------------------------------------------------------------------------------------------------*/
+
+pointListLength([],0).
+
+pointListLength([_|List], Length):-
+    pointListLength(List, LengthReturned),
+    Length is LengthReturned + 1.

@@ -1,19 +1,3 @@
-
-/* NOTE: although in the comments coordinate values are referred to as such, for ease of understanding */
-/* they are called Xcoord and Ycoord when containing a char value and Xnum and Ynum when containing a numerical value. */
-
-/* getNumericalCoord(+CharCoordinate, -NumericalCoordinate) */
-/* Simultaneously checks if the input coordinate is valid (whithin the board range) and converts it to a numerical value. */
-getNumericalCoord('1', 1).
-getNumericalCoord('2', 2).
-getNumericalCoord('3', 3).
-getNumericalCoord('4', 4).
-getNumericalCoord('5', 5).
-getNumericalCoord('6', 6).
-getNumericalCoord('7', 7).
-getNumericalCoord('8', 8).
-
-
 /* placePieceX(+Board, +Player, +Xcoordinate, +Ycoordinate, +IsDiag, -NewBoard) */
 /* placePieceY(+Column, +Player, +Ycoordinate, +IsDiag, -NewColumn) */
 /* These two predicates are used in tandem to place a piece of the given player on the board at the given coordinates; */
@@ -141,8 +125,7 @@ checkCutsX([_ | OldDiags], [_ | NewDiags], Xnum, Ynum, Cut):-
 /* executePlay(+Board, +Player, +Xcoordinate, +Ycoordinate, -NewBoard, -Cut) */
 /* Places a tile on the board and and enacts all subsequent consequences, and informs the caller on whether a cut was made. */
 
-executePlay([Board, Diags], Player, Xcoord, Ycoord, [RetBoard, RetDiags], Cut):-
-    getNumericalCoord(Xcoord, Xnum), getNumericalCoord(Ycoord, Ynum),
+executePlay([Board, Diags], Player, Xnum, Ynum, [RetBoard, RetDiags], Cut):-
     placePieceX(Board, Player, Ynum, Xnum, 0, RetBoard),
     connectDiags(Board, Diags, Player, Ynum, Xnum, RetDiags),
     checkCutsX(Diags, RetDiags, 7, 7, Cut).
