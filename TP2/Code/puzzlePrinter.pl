@@ -1,42 +1,52 @@
+:-ensure_loaded('puzzleNodes.pl').
+
+fillDistance(0, Char).
+
 fillDistance(Distance, Char):-
     RealDistance is abs(Distance) * 6,
     repeatChar(RealDistance, Char).
 
-repeatChar(0, _).
+%-------------------------------------------------------------------
 
+fillDistanceDelta(0, Char).
+
+fillDistanceDelta(Distance, Char):-
+    RealDistance is abs(Distance) * 6 - 1,
+    repeatChar(RealDistance, Char).
+
+%-------------------------------------------------------------------
+
+repeatChar(0, _).
+%-------------------------------------------------------------------
 repeatChar(Distance, Char):-
     write(Char),
     NewDistance is Distance - 1,
     repeatChar(NewDistance, Char).
 
-getNodeDistance(_-NodeDistance-_, NodeDistance).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-print(Root, SelectedNode):-
+printPuzzle(Root, SelectedNode):-
     getPathTo(Root,SelectedNode,Path),
-    getLeftDistance(Root,Path,LeftDistance),
-    print(Root, Distance, [_|Path]).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-print(Root, Distance, [NextNodeID|Path]):-
+    getLeftDistance(Root,Path,Distance),
+    printPuzzle(Root, Distance, Path).
+%-------------------------------------------------------------------
+printPuzzle(Root, Distance, []):-
+    printHoldingChar(Distance),
+    printFulcrumLine(Root,Distance),
+    printIdLine(Root,Distance), nl.
+%-------------------------------------------------------------------
+printPuzzle(Root, Distance, [NextNodeID|Path]):-
     printHoldingChar(Distance),
     printFulcrumLine(Root,Distance),
     printIdLine(Root,Distance),
     
-    getNode(Root, NextNodeID, Node),
+    getNodeChild(Root, NextNodeID, Node),
     getNodeDistance(Node,NodeDistance),
     NewDistance is Distance - NodeDistance,
 
-    print(Node, NewDistance, Path).
+    getNodeChildren(Node,Children),
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-print(Root, Distance, []):-
-    printHoldingChar(Distance),
-    printFulcrumLine(Root,Distance),
-    printIdLine(Root,Distance), nl.
+    printPuzzle(Children, NewDistance, Path).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -49,67 +59,74 @@ printHoldingChar(Distance):-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 printFulcrumLine(Nodes, Distance):-
-    fillDistance(Distance, ' '), 
+    getFulcrumDistance(Nodes, FulcrumDistance),
+    DistanceFill is Distance - FulcrumDistance,
+    fillDistance(DistanceFill, ' '), 
     printFulcrumLine(Nodes).
+%--------------------------------------------------------------------
+printFulcrumLine([LeftNode,RightNode|Nodes]):-
+    getNodeDistance(LeftNode, LeftDistance),
+    getNodeDistance(RightNode, RightDistance),
+    LeftDistance < 0,
+    RightDistance > 0,
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    printFulcrumLine([LeftNode,[foo,0,bar],RightNode|Nodes]).
+%--------------------------------------------------------------------
 printFulcrumLine([LeftNode,RightNode|Nodes]):-
     getNodeDistance(LeftNode, LeftDistance),
     getNodeDistance(RightNode, RightDistance),
     Delta is RightDistance - LeftDistance,
 
     write('+'),
-    fillDistance(Delta, '-'),
+    fillDistanceDelta(Delta, '-'),
 
     printFulcrumLine([RightNode|Nodes]).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%--------------------------------------------------------------------
 printFulcrumLine([Node]):-
     write('+'), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 printIdLine(Nodes, Distance):-
-    fillDistance(Distance, ' '), 
+    getFulcrumDistance(Nodes, FulcrumDistance),
+    DistanceFill is Distance - FulcrumDistance,
+    fillDistance(DistanceFill, ' '), 
     printIdLine(Nodes).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%--------------------------------------------------------------------
 printIdLine([LeftNode,RightNode|Nodes]):-
     getNodeDistance(LeftNode, LeftDistance),
     getNodeDistance(RightNode, RightDistance),
 
-    printNodeAttributes(Node, UsedSpace),
+    printNodeAttributes(LeftNode, UsedSpace),
     
-    Delta is RightDistance - LeftDistance - UsedSpace,
-    fillDistance(Delta, '-'),
+    Delta is 6 * (RightDistance - LeftDistance) - UsedSpace,
+    repeatChar(Delta, ' '),
 
     printIdLine([RightNode|Nodes]).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%--------------------------------------------------------------------
 printIdLine([Node]):-
     printNodeAttributes(Node,_), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-printNodeAttributes(NodeID-_-NodeWeight, UsedSpace):-
+printNodeAttributes(Node, UsedSpace):-
+    getNodeChildren(Node, NodeWeight),
     number(NodeWeight),
+    getNodeID(Node, NodeID),
     write(NodeID), write('='), write(NodeWeight),
 
     atom_chars(NodeID, CharList), length(CharList, IDlength),
     number_length(NodeWeight, WeightLength),
 
-    UsedSpace is IDlength + WeightLength.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-printNodeAttributes(NodeID-_-_, UsedSpace):-
+    UsedSpace is IDlength + WeightLength + 1.
+%--------------------------------------------------------------------
+printNodeAttributes(Node, UsedSpace):-
+    getNodeID(Node, NodeID),
     write(NodeID),
 
-    atom_chars(NodeID, CharList), length(CharList, UsedSpace).
+    atom_chars(NodeID, CharList), length(CharList, IDlength),
+    
+    UsedSpace is IDlength + 1.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -119,41 +136,30 @@ number_length(Number, Length):-
 
     number_length(NewNumber, Length_i),
     Length is Length_i + 1.
-
+%--------------------------------------------------------------------
 number_length(_,0).
-    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-getNode([NodeID-NodeDistance-NodeWeight], NodeID, NodeID-NodeDistance-NodeWeight).
-
-getNode([_|Nodes], NodeID, Node):-
-    getNode(Nodes, NodeID, Node).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-getPathTo([NodeID-_-_|Nodes],Node,[]).
-
-getPathTo([_-_-Nodes|_],Node,Path):-
-    getPathTo(Nodes, Node, Path).
-
-getPathTo([_|Nodes], Node, Path):-
-    getPathTo(Nodes, Node, Path).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-getLeftDistance(_,[],0):-
-
+getLeftDistance([FirstNode|_],[],Distance):-
+    getNodeDistance(FirstNode, Distance).
+%--------------------------------------------------------------------
 getLeftDistance([FirstNode|Nodes],[PathID|Path],LeftDistance):-
     getNodeDistance(FirstNode, DistanceA),
 
-    getNode([FirstNode|Nodes], PathID, _-_-FollowingNodes),
-    getLeftDistance(FollowingNodes, Path, DistanceB),
+    getNodeChild([FirstNode|Nodes], PathID, FoundNode),
+    getNodeChildren(FoundNode, Children),
+    getLeftDistance(Children, Path, DistanceB),
 
-    LeftDistance is min(DistanceA, DistanceB).
-    
+    getNodeDistance(FoundNode, AddedDistance),
+    RealDistanceB is DistanceB + AddedDistance,
 
+    LeftDistance is min(DistanceA, RealDistanceB).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+getFulcrumDistance([FirstNode|_], Distance):-
+    getNodeDistance(FirstNode, Distance).
 
 
 
