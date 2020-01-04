@@ -1,4 +1,5 @@
-:-ensure_loaded('puzzleNodes.pl').
+:-ensure_loaded('puzzleNodes.pl'). 
+use_module(library(lists)).
 
 fillDistance(0, Char).
 
@@ -25,10 +26,17 @@ repeatChar(Distance, Char):-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+printPuzzle(Root):-
+    getLeftDistance(Root, [], Distance),
+    printPuzzle(Root,Distance,[]).
+%-------------------------------------------------------------------
 printPuzzle(Root, SelectedNode):-
     getPathTo(Root,SelectedNode,Path),
     getLeftDistance(Root,Path,Distance),
     printPuzzle(Root, Distance, Path).
+%-------------------------------------------------------------------
+printPuzzle(Root, _, _):-
+    number(Root).
 %-------------------------------------------------------------------
 printPuzzle(Root, Distance, []):-
     printHoldingChar(Distance),
@@ -141,6 +149,9 @@ number_length(_,0).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+getLeftDistance(Children,_,0):-
+    number(Children).
+%--------------------------------------------------------------------
 getLeftDistance([FirstNode|_],[],Distance):-
     getNodeDistance(FirstNode, Distance).
 %--------------------------------------------------------------------

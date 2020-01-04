@@ -12,17 +12,17 @@ solvePuzzle(Puzzle, FinalVarList):-
 balanceNodes([], Balance, VarList, VarList, 0):-
     Balance #= 0.
 balanceNodes([Node|MoreNodes], Balance, VarList, FinalVarList, TotWeight):-
-    getNodeWeight(Node, VarList, Weight, WeighedWeight, NewVarList),
-    AddedBalance #= Balance + WeighedWeight,
+    getNodeWeight(Node, VarList, Weight, Torque, NewVarList),
+    AddedBalance #= Balance + Torque,
     TotWeight #= PrevWeight + Weight,
     balanceNodes(MoreNodes, AddedBalance, NewVarList, FinalVarList, PrevWeight).
 
-%getNodeWeight(-Node, -VarList, +Weight, WeighedWeight, NewVarList)
+%getNodeWeight(-Node, -VarList, +Weight, Torque, NewVarList)
 %case 2: is dead end
-getNodeWeight([_, Distance, Weight], VarList, Weight, WeighedWeight, [Weight|VarList]):-
+getNodeWeight([_, Distance, Weight], VarList, Weight, Torque, [Weight|VarList]):-
     var(Weight),
-    WeighedWeight #= Distance * Weight.
+    Torque #= Distance * Weight.
 %case 1: has children nodes
-getNodeWeight([_, Distance, Children], VarList, Weight, WeighedWeight, NewVarList):-
+getNodeWeight([_, Distance, Children], VarList, Weight, Torque, NewVarList):-
     balanceNodes(Children, 0, VarList, NewVarList, Weight),
-    WeighedWeight #= Distance * Weight.
+    Torque #= Distance * Weight.
