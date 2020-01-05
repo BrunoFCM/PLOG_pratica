@@ -1,17 +1,20 @@
 :- use_module(library(clpfd)).
 :- ensure_loaded('puzzleNodes.pl').
 :- ensure_loaded('puzzleSolver.pl').
+:- ensure_loaded('statistics.pl').
 
 generatePuzzle(WeightsNumber, Puzzle):-
     generatePuzzleShape(WeightsNumber, Puzzle, FinalVarList),
-    %optimizeNodes(Puzzle),
 
     solveGeneratedPuzzle(Puzzle, SolvedVars),
     append(SolvedVars, FinalVarList, AuxVars),
 
-    optimizeDistances(Puzzle, Options, OptimizeVars),
-
-    labeling([], AuxVars).
+	reset_timer,
+    %labeling([ffc,value(selRandom)], AuxVars),
+    %labeling([ffc], AuxVars),
+    labeling([], AuxVars),
+	print_time,
+	fd_statistics.
 
 generatePuzzleShape(WeightsNumber, Puzzle, [ListLength|AuxVars]):-
     domain([ListLength], 2, WeightsNumber),
@@ -61,37 +64,4 @@ solveGeneratedPuzzle(Puzzle, FinalVarList):-
     length(FinalVarList, VarNum),
     domain(FinalVarList, 1, VarNum),
     all_distinct(FinalVarList).
-
-%balanceNodes(-Nodelist, -Balance, -Varlist, +FinalVarList, +TotWeight) , call with Balance = 0 and VarList = []
-balanceNodes([], Balance, VarList, VarList, 0):-
-    Balance #= 0.
-balanceNodes([Node|MoreNodes], Balance, VarList, FinalVarList, TotWeight):-
-    getNodeWeight(Node, VarList, Weight, Torque, NewVarList),
-    AddedBalance #= Balance + Torque,
-    TotWeight #= PrevWeight + Weight,
-    balanceNodes(MoreNodes, AddedBalance, NewVarList, FinalVarList, PrevWeight).
-
-optimizeDistances([Node|Puzzle], [min(AbsDistance)|Options], [AbsDistance|OptimizeVars]):-
-    getNodeDistance(Node, Distance),
-    AbsDistance #= abs(Distance),
-/*
-optimizeNodes(Weight):-
-    var(Weight).
-
-optimizeNodes(Nodes):-
-    nonvar(Nodes),
-    length(Nodes, 1).
-
-optimizeNodes([NodeA,NodeB|Nodes]):-    
-    getNodeChildren(NodeA,Children),
-    optimizeNodes(Children),
-
-    getNodeDistance(NodeA, DistanceA),
-    getNodeDistance(NodeB, DistanceB),
-    DistanceA #< DistanceB,
-
-    optimizeNodes([NodeB|Nodes]).
-
-*/
-
 

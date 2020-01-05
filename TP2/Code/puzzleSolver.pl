@@ -1,12 +1,16 @@
 :- use_module(library(clpfd)).
 :- ensure_loaded('puzzleNodes.pl').
+:- ensure_loaded('statistics.pl').
 
 solvePuzzle(Puzzle, FinalVarList):-
     balanceNodes(Puzzle, 0, [], FinalVarList, _),
     length(FinalVarList, VarNum),
     domain(FinalVarList, 1, VarNum),
     all_distinct(FinalVarList),
-    labeling([], FinalVarList).
+	reset_timer,
+    labeling([], FinalVarList),
+	print_time,
+	fd_statistics.
 
 %balanceNodes(-Nodelist, -Balance, -Varlist, +FinalVarList, +TotWeight) , call with Balance = 0 and VarList = []
 balanceNodes([], Balance, VarList, VarList, 0):-
