@@ -3,9 +3,13 @@
 :- ensure_loaded('puzzleSolver.pl').
 
 generatePuzzle(WeightsNumber, Puzzle):-
-    generatePuzzleShape(WeightsNumber, Puzzle, AuxVars),
+    generatePuzzleShape(WeightsNumber, Puzzle, FinalVarList),
+    %optimizeNodes(Puzzle),
+
     solveGeneratedPuzzle(Puzzle, SolvedVars),
-    labeling([], FinalVarList).
+    append(SolvedVars, FinalVarList, AuxVars),
+
+    labeling([], AuxVars).
 
 generatePuzzleShape(WeightsNumber, Puzzle, [ListLength|AuxVars]):-
     domain([ListLength], 2, WeightsNumber),
@@ -16,37 +20,38 @@ generatePuzzleShape(WeightsNumber, Puzzle, [ListLength|AuxVars]):-
     domain(WeightsList, 1, SubWeightNumber),
     sum(WeightsList, #=, WeightsNumber),
 
-    generateNodes(Puzzle, WeightsList, SubAuxList),
+    generateNodes(WeightsNumber,Puzzle, WeightsList, SubAuxList),
     append(AuxVars, WeightsList, SubAuxList).
-    
-    
-generateNodes([Node|Nodes], [WeightsNumber|WeightsNumbers], [Distance,ListLength|AuxVars]):-
+
+generateNodes(_,_,[],[]). 
+
+generateNodes(WeightsNumber,[Node|Nodes], [Weights|WeightsList], [Distance|AuxVars]):-
     length(Node,3),
     getNodeID(Node,a),
     getNodeDistance(Node,Distance),
     domain([Distance], -100, 100), Distance #\= 0,
 
-    domain([ListLength], 1, WeightsNumber),
-    
+    generateChildren(WeightsNumber, Weights, Children, SubWeightsList, ChildrenGenerateVars),
+    generateNodes(WeightsNumber, Children, SubWeightsList, ChildAuxVars),
     getNodeChildren(Node, Children),
+
+    append(ChildAuxVars, ChildrenGenerateVars, ChildVars),
+    append(SubWeightsList, ChildVars, SelfAuxVars),
+    
+    generateNodes(WeightsNumber,Nodes, WeightsList, SiblingsAuxList),
+    append(SelfAuxVars, SiblingsAuxList, AuxVars).
+
+generateChildren(_, 1, Weight, [], []).
+
+generateChildren(WeightsNumber, Weights, Children, WeightsList, [ListLength]):-
+    domain([ListLength], 2, WeightsNumber), 
+    ListLength #=< Weights,
+
     length(Children, ListLength),
-
     length(WeightsList, ListLength),
-    SubWeightNumber is WeightsNumber - 1,
-    domain(WeightsList, 1, SubWeightNumber),
-    sum(WeightsList, #=, WeightsNumber),
 
-    WeightsNumber #= 1 #<=> IsWeight,
-    generateChildren(IsWeight, Children, WeightsList, ChildAuxVars),
-    append(SelfAuxVars, WeightsList, ChildAuxVars),
-
-    generateNodes(Nodes, WeightsNumbers, SiblingsAuxList),
-    append(AuxVars, SelfAuxVars, SiblingsAuxList).
-
-generateChildren(1, Children, _, []).
-
-generateChildren(0, Children, WeightsList, ChildAuxVars):-
-    generateNodes(Children, WeightsList, ChildAuxVars).
+    domain(WeightsList, 1, WeightsNumber),
+    sum(WeightsList, #=, Weights).
     
 
 solveGeneratedPuzzle(Puzzle, FinalVarList):-
@@ -54,4 +59,25 @@ solveGeneratedPuzzle(Puzzle, FinalVarList):-
     length(FinalVarList, VarNum),
     domain(FinalVarList, 1, VarNum),
     all_distinct(FinalVarList).
+
+/*
+optimizeNodes(Weight):-
+    var(Weight).
+
+optimizeNodes(Nodes):-
+    nonvar(Nodes),
+    length(Nodes, 1).
+
+optimizeNodes([NodeA,NodeB|Nodes]):-    
+    getNodeChildren(NodeA,Children),
+    optimizeNodes(Children),
+
+    getNodeDistance(NodeA, DistanceA),
+    getNodeDistance(NodeB, DistanceB),
+    DistanceA #< DistanceB,
+
+    optimizeNodes([NodeB|Nodes]).
+
+*/
+
 

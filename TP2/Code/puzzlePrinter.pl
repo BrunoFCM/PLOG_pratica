@@ -1,5 +1,4 @@
 :-ensure_loaded('puzzleNodes.pl'). 
-use_module(library(lists)).
 
 fillDistance(0, Char).
 
@@ -132,9 +131,7 @@ printNodeAttributes(Node, UsedSpace):-
     getNodeID(Node, NodeID),
     write(NodeID),
 
-    atom_chars(NodeID, CharList), length(CharList, IDlength),
-    
-    UsedSpace is IDlength + 1.
+    atom_chars(NodeID, CharList), length(CharList, UsedSpace).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -172,7 +169,17 @@ getLeftDistance([FirstNode|Nodes],[PathID|Path],LeftDistance):-
 getFulcrumDistance([FirstNode|_], Distance):-
     getNodeDistance(FirstNode, Distance).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+printLoop(Puzzle):-
+    printPuzzle(Puzzle),
+    printMainLoop(Puzzle).
+
+printMainLoop(Puzzle):-
+    read(Input),
+    printPuzzle(Puzzle, Input),
+    printMainLoop(Puzzle).
+    
 
 
 

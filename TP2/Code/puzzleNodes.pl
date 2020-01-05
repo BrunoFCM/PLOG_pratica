@@ -6,7 +6,7 @@ getNodeChildren([_,_,Children], Children).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-getPathTo([Node|Nodes],NodeID,[NodeID]):-
+getPathTo([Node|_],NodeID,[NodeID]):-
     getNodeID(Node, NodeID).
 %--------------------------------------------------------------------
 getPathTo([Node|_],NodeID,[ParentID|Path]):-
