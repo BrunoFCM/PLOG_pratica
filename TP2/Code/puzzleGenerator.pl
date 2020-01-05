@@ -9,6 +9,8 @@ generatePuzzle(WeightsNumber, Puzzle):-
     solveGeneratedPuzzle(Puzzle, SolvedVars),
     append(SolvedVars, FinalVarList, AuxVars),
 
+    optimizeDistances(Puzzle, Options, OptimizeVars),
+
     labeling([], AuxVars).
 
 generatePuzzleShape(WeightsNumber, Puzzle, [ListLength|AuxVars]):-
@@ -21,7 +23,7 @@ generatePuzzleShape(WeightsNumber, Puzzle, [ListLength|AuxVars]):-
     sum(WeightsList, #=, WeightsNumber),
 
     generateNodes(WeightsNumber,Puzzle, WeightsList, SubAuxList),
-    append(AuxVars, WeightsList, SubAuxList).
+    append(SubAuxList, WeightsList, AuxVars).
 
 generateNodes(_,_,[],[]). 
 
@@ -41,7 +43,7 @@ generateNodes(WeightsNumber,[Node|Nodes], [Weights|WeightsList], [Distance|AuxVa
     generateNodes(WeightsNumber,Nodes, WeightsList, SiblingsAuxList),
     append(SelfAuxVars, SiblingsAuxList, AuxVars).
 
-generateChildren(_, 1, Weight, [], []).
+generateChildren(_, 1, _, [], []).
 
 generateChildren(WeightsNumber, Weights, Children, WeightsList, [ListLength]):-
     domain([ListLength], 2, WeightsNumber), 
@@ -60,6 +62,18 @@ solveGeneratedPuzzle(Puzzle, FinalVarList):-
     domain(FinalVarList, 1, VarNum),
     all_distinct(FinalVarList).
 
+%balanceNodes(-Nodelist, -Balance, -Varlist, +FinalVarList, +TotWeight) , call with Balance = 0 and VarList = []
+balanceNodes([], Balance, VarList, VarList, 0):-
+    Balance #= 0.
+balanceNodes([Node|MoreNodes], Balance, VarList, FinalVarList, TotWeight):-
+    getNodeWeight(Node, VarList, Weight, Torque, NewVarList),
+    AddedBalance #= Balance + Torque,
+    TotWeight #= PrevWeight + Weight,
+    balanceNodes(MoreNodes, AddedBalance, NewVarList, FinalVarList, PrevWeight).
+
+optimizeDistances([Node|Puzzle], [min(AbsDistance)|Options], [AbsDistance|OptimizeVars]):-
+    getNodeDistance(Node, Distance),
+    AbsDistance #= abs(Distance),
 /*
 optimizeNodes(Weight):-
     var(Weight).

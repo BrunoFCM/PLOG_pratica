@@ -7,7 +7,10 @@ debugThing(1,Puzzle, AuxVars):-
     generatePuzzleShape(2, Puzzle, AuxVars),
     labeling([],AuxVars).
 debugThing(2,[A,B], SubAuxVars):-
-    generateNodes(3,[A,B], [1,2], SubAuxVars),
+    generateNodes(2,[A,B], [1,1], SubAuxVars),
+    labeling([],SubAuxVars).
+debugThing(21,[A,B], SubAuxVars):-
+    generateNodes(2,[B], [1], SubAuxVars),
     labeling([],SubAuxVars).
 debugThing(3,Children, SubAuxVars):-
     generateChildren(3,3,Children, SubAuxVars),
